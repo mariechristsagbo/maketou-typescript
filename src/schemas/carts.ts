@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Cart, CartDetails, CartStatus, Checkout, CustomerInfo } from "./types.js";
+import type { Cart, CartDetails, CartStatus, Checkout, CustomerInfo } from "../types.js";
 
 const cartStatusSchema = z.enum([
   "waiting_payment",

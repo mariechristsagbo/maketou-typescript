@@ -1,6 +1,6 @@
-import { cartDetailsResponseSchema, checkoutResponseSchema } from "./schemas.js";
-import type { CartDetails, Checkout, CreateCartInput } from "./types.js";
-import { MaketouTransport } from "./transport.js";
+import { cartDetailsResponseSchema, checkoutResponseSchema } from "../schemas/carts.js";
+import type { CartDetails, Checkout, CreateCartInput } from "../types.js";
+import { MaketouTransport } from "../transport.js";
 
 export class Carts {
   readonly #transport: MaketouTransport;

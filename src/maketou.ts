@@ -1,4 +1,4 @@
-import { Carts } from "./carts.js";
+import { Carts } from "./resources/carts.js";
 import { MaketouConfigurationError } from "./errors.js";
 import { MaketouTransport } from "./transport.js";
 
