@@ -9,6 +9,10 @@ export class Carts {
   }
 
   create(input: CreateCartInput): Promise<Checkout> {
-    return this.#transport.post<Checkout>("/api/v1/stores/cart/checkout", input);
+    return this.#transport.post<Checkout>(
+      "/api/v1/stores/cart/checkout",
+      input,
+      "carts.create",
+    );
   }
 }

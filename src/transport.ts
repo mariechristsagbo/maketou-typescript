@@ -1,7 +1,32 @@
+import { MaketouError, MaketouRateLimitedError } from "./errors.js";
+
 export interface TransportOptions {
   apiKey: string;
   baseUrl: string;
   fetch: typeof globalThis.fetch;
+}
+
+interface ApiErrorBody {
+  code?: string;
+  message?: string;
+}
+
+function isApiErrorBody(value: unknown): value is ApiErrorBody {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const { code, message } = value as Record<string, unknown>;
+  return (code === undefined || typeof code === "string") && (message === undefined || typeof message === "string");
+}
+
+function parseRetryAfter(value: string | null): number | undefined {
+  if (value === null) {
+    return undefined;
+  }
+
+  const retryAfter = Number(value);
+  return Number.isFinite(retryAfter) && retryAfter >= 0 ? retryAfter : undefined;
 }
 
 export class MaketouTransport {
@@ -15,7 +40,7 @@ export class MaketouTransport {
     this.#fetch = options.fetch;
   }
 
-  async post<T>(path: string, body: unknown): Promise<T> {
+  async post<T>(path: string, body: unknown, operation: string): Promise<T> {
     const response = await this.#fetch(`${this.#baseUrl}${path}`, {
       body: JSON.stringify(body),
       headers: {
@@ -25,6 +50,28 @@ export class MaketouTransport {
       method: "POST",
     });
 
+    if (!response.ok) {
+      await this.throwApiError(response, operation);
+    }
+
     return (await response.json()) as T;
+  }
+
+  async throwApiError(response: Response, operation: string): Promise<never> {
+    const payload: unknown = await response.json().catch(() => undefined);
+    const apiError = isApiErrorBody(payload) ? payload : {};
+    const options = {
+      code: apiError.code,
+      operation,
+      retryAfter: parseRetryAfter(response.headers.get("Retry-After")),
+      status: response.status,
+    };
+    const message = apiError.message ?? `Maketou request failed with status ${response.status}.`;
+
+    if (response.status === 429) {
+      throw new MaketouRateLimitedError(message, options);
+    }
+
+    throw new MaketouError(message, options);
   }
 }
