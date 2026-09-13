@@ -1,5 +1,5 @@
-import { parseCheckout } from "./parsers.js";
-import type { Checkout, CreateCartInput } from "./types.js";
+import { parseCartDetails, parseCheckout } from "./parsers.js";
+import type { CartDetails, Checkout, CreateCartInput } from "./types.js";
 import { MaketouTransport } from "./transport.js";
 
 export class Carts {
@@ -7,6 +7,14 @@ export class Carts {
 
   constructor(transport: MaketouTransport) {
     this.#transport = transport;
+  }
+
+  retrieve(cartId: string): Promise<CartDetails> {
+    return this.#transport.get(
+      `/api/v1/stores/cart/${encodeURIComponent(cartId)}`,
+      "carts.retrieve",
+      parseCartDetails,
+    );
   }
 
   create(input: CreateCartInput): Promise<Checkout> {

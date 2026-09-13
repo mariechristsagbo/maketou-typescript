@@ -41,20 +41,37 @@ export class MaketouTransport {
     this.#fetch = options.fetch;
   }
 
-  async post<T>(
+  get<T>(path: string, operation: string, parse: (value: unknown) => ParseResult<T>): Promise<T> {
+    return this.request(path, { method: "GET" }, operation, parse);
+  }
+
+  post<T>(
     path: string,
     body: unknown,
     operation: string,
     parse: (value: unknown) => ParseResult<T>,
   ): Promise<T> {
-    const response = await this.#fetch(`${this.#baseUrl}${path}`, {
-      body: JSON.stringify(body),
-      headers: {
-        Authorization: `Bearer ${this.#apiKey}`,
-        "Content-Type": "application/json",
+    return this.request(
+      path,
+      {
+        body: JSON.stringify(body),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
       },
-      method: "POST",
-    });
+      operation,
+      parse,
+    );
+  }
+
+  async request<T>(
+    path: string,
+    init: RequestInit,
+    operation: string,
+    parse: (value: unknown) => ParseResult<T>,
+  ): Promise<T> {
+    const headers = new Headers(init.headers);
+    headers.set("Authorization", `Bearer ${this.#apiKey}`);
+    const response = await this.#fetch(`${this.#baseUrl}${path}`, { ...init, headers });
 
     if (!response.ok) {
       await this.throwApiError(response, operation);

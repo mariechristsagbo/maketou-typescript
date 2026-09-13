@@ -1,4 +1,4 @@
-import type { Cart, CartStatus, Checkout, CustomerInfo } from "./types.js";
+import type { Cart, CartDetails, CartStatus, Checkout, CustomerInfo } from "./types.js";
 
 export type ParseResult<T> =
   | { issues: readonly string[]; success: false }
@@ -80,6 +80,39 @@ function parseCart(value: unknown, issues: string[]): Cart | undefined {
   }
 
   return { createdAt, customerInfo, id, status: status as CartStatus, updatedAt };
+}
+
+export function parseCartDetails(value: unknown): ParseResult<CartDetails> {
+  const issues: string[] = [];
+  const cart = parseCart(value, issues);
+
+  if (!isRecord(value) || cart === undefined) {
+    return { issues, success: false };
+  }
+
+  const paymentId = readOptionalString(value.paymentId, "paymentId", issues);
+  let meta: Record<string, string> | undefined;
+
+  if (value.meta !== undefined) {
+    if (!isRecord(value.meta)) {
+      issues.push("meta: expected an object");
+    } else {
+      meta = {};
+      for (const [key, item] of Object.entries(value.meta)) {
+        if (typeof item !== "string") {
+          issues.push(`meta.${key}: expected a string`);
+        } else {
+          meta[key] = item;
+        }
+      }
+    }
+  }
+
+  if (issues.length > 0) {
+    return { issues, success: false };
+  }
+
+  return { success: true, value: { ...cart, meta, paymentId } };
 }
 
 export function parseCheckout(value: unknown): ParseResult<Checkout> {

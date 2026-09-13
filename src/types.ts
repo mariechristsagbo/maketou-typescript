@@ -36,6 +36,11 @@ export interface CreateCartInput {
   redirectURL?: string;
 }
 
+export interface CartDetails extends Cart {
+  meta?: Record<string, string>;
+  paymentId?: string;
+}
+
 export interface Checkout {
   cart: Cart;
   redirectUrl: string;
