@@ -59,12 +59,8 @@ jobs:
         env:
           BRANCH: chore/sync-maketou-openapi
         run: |
-          if git ls-remote --exit-code --heads origin "$BRANCH"; then
-            git fetch origin "$BRANCH"
-            git checkout -B "$BRANCH" "origin/$BRANCH"
-          else
-            git checkout -b "$BRANCH"
-          fi
+          git fetch origin main
+          git checkout -B "$BRANCH" "origin/main"
 
           pnpm spec:sync
 
@@ -77,7 +73,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add resources/openapi.yaml
           git commit -m "chore: sync Maketou OpenAPI specification"
-          git push origin "HEAD:$BRANCH"
+          git push --force-with-lease origin "HEAD:$BRANCH"
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
       - name: Create synchronization pull request
