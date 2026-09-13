@@ -1,4 +1,4 @@
-import { parseCartDetails, parseCheckout } from "./parsers.js";
+import { cartDetailsResponseSchema, checkoutResponseSchema } from "./schemas.js";
 import type { CartDetails, Checkout, CreateCartInput } from "./types.js";
 import { MaketouTransport } from "./transport.js";
 
@@ -13,7 +13,7 @@ export class Carts {
     return this.#transport.get(
       `/api/v1/stores/cart/${encodeURIComponent(cartId)}`,
       "carts.retrieve",
-      parseCartDetails,
+      cartDetailsResponseSchema,
     );
   }
 
@@ -22,7 +22,7 @@ export class Carts {
       "/api/v1/stores/cart/checkout",
       input,
       "carts.create",
-      parseCheckout,
+      checkoutResponseSchema,
     );
   }
 }

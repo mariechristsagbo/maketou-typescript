@@ -1,3 +1,8 @@
+export interface MaketouValidationIssue {
+  message: string;
+  path: string;
+}
+
 export interface MaketouErrorOptions {
   code?: string;
   operation: string;
@@ -30,13 +35,10 @@ export class MaketouRateLimitedError extends MaketouError {
 }
 
 export class MaketouResponseError extends MaketouError {
-  readonly issues: readonly string[];
+  readonly issues: readonly MaketouValidationIssue[];
 
-  constructor(operation: string, issues: readonly string[]) {
-    super("Maketou returned an unexpected response.", {
-      operation,
-      status: 502,
-    });
+  constructor(operation: string, status: number, issues: readonly MaketouValidationIssue[]) {
+    super("Maketou returned an unexpected response.", { operation, status });
     this.name = "MaketouResponseError";
     this.issues = issues;
   }
