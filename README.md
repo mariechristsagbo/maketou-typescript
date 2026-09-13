@@ -135,6 +135,17 @@ pnpm test
 pnpm build
 ```
 
+## Maintainer: OpenAPI contract
+
+The repository vendors Maketou's published OpenAPI snapshot at [`resources/openapi.yaml`](./resources/openapi.yaml). It is a maintenance reference and is not included in the npm package.
+
+```sh
+pnpm spec:check # detect upstream contract drift without modifying files
+pnpm spec:sync  # replace the local snapshot with the current upstream document
+```
+
+A weekly GitHub Actions workflow and manual workflow dispatch run `spec:check`. When the upstream contract changes, the workflow updates only the vendored specification on `chore/sync-maketou-openapi` and opens or updates a review PR. It never updates SDK schemas, types, or behavior automatically: compatibility remains a human review decision.
+
 ## Documentation audit
 
 [`AUDIT.md`](./AUDIT.md) records observed discrepancies between the public documentation, OpenAPI specification, and unauthenticated production responses as of 2026-09-13.
