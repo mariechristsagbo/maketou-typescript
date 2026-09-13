@@ -6,7 +6,6 @@ const DEFAULT_BASE_URL = "https://api.maketou.net";
 
 export interface MaketouOptions {
   apiKey: string;
-  baseUrl?: string;
   fetch?: typeof globalThis.fetch;
 }
 
@@ -21,7 +20,7 @@ export class Maketou {
     this.carts = new Carts(
       new MaketouTransport({
         apiKey: options.apiKey,
-        baseUrl: options.baseUrl ?? DEFAULT_BASE_URL,
+        baseUrl: DEFAULT_BASE_URL,
         fetch: options.fetch ?? globalThis.fetch,
       }),
     );
