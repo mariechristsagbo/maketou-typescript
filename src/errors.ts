@@ -28,3 +28,16 @@ export class MaketouConfigurationError extends Error {
 export class MaketouRateLimitedError extends MaketouError {
   override name = "MaketouRateLimitedError";
 }
+
+export class MaketouResponseError extends MaketouError {
+  readonly issues: readonly string[];
+
+  constructor(operation: string, issues: readonly string[]) {
+    super("Maketou returned an unexpected response.", {
+      operation,
+      status: 502,
+    });
+    this.name = "MaketouResponseError";
+    this.issues = issues;
+  }
+}

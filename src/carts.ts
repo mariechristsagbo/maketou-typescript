@@ -1,3 +1,4 @@
+import { parseCheckout } from "./parsers.js";
 import type { Checkout, CreateCartInput } from "./types.js";
 import { MaketouTransport } from "./transport.js";
 
@@ -13,6 +14,7 @@ export class Carts {
       "/api/v1/stores/cart/checkout",
       input,
       "carts.create",
+      parseCheckout,
     );
   }
 }

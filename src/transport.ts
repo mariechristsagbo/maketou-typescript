@@ -1,4 +1,5 @@
-import { MaketouError, MaketouRateLimitedError } from "./errors.js";
+import { MaketouError, MaketouRateLimitedError, MaketouResponseError } from "./errors.js";
+import type { ParseResult } from "./parsers.js";
 
 export interface TransportOptions {
   apiKey: string;
@@ -40,7 +41,12 @@ export class MaketouTransport {
     this.#fetch = options.fetch;
   }
 
-  async post<T>(path: string, body: unknown, operation: string): Promise<T> {
+  async post<T>(
+    path: string,
+    body: unknown,
+    operation: string,
+    parse: (value: unknown) => ParseResult<T>,
+  ): Promise<T> {
     const response = await this.#fetch(`${this.#baseUrl}${path}`, {
       body: JSON.stringify(body),
       headers: {
@@ -54,7 +60,12 @@ export class MaketouTransport {
       await this.throwApiError(response, operation);
     }
 
-    return (await response.json()) as T;
+    const parsed = parse(await response.json());
+    if (!parsed.success) {
+      throw new MaketouResponseError(operation, parsed.issues);
+    }
+
+    return parsed.value;
   }
 
   async throwApiError(response: Response, operation: string): Promise<never> {
