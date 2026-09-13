@@ -31,9 +31,9 @@ describe("checkout response validation", () => {
 
     expect(error).toBeInstanceOf(MaketouResponseError);
     expect(error).toMatchObject({
-      issues: ["redirectUrl: expected a string"],
+      issues: [{ message: "expected string", path: "redirectUrl" }],
       operation: "carts.create",
-      status: 502,
+      status: 201,
     });
   });
 });
