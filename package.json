@@ -20,6 +20,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "lint": "eslint .",
+    "spec:check": "node scripts/openapi.mjs check",
+    "spec:sync": "node scripts/openapi.mjs sync",
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
