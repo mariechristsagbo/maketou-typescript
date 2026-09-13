@@ -66,6 +66,21 @@ describe("HTTP response boundaries", () => {
     expect(JSON.stringify(error)).not.toContain("buyer@example.com");
   });
 
+  it("rejects malformed customer information", async () => {
+    const maketou = new Maketou({
+      apiKey: "test-api-key",
+      fetch: async () => Response.json({ ...cart, customerInfo: { email: 42 } }),
+    });
+
+    const error = await maketou.carts.retrieve(cart.id).catch((reason: unknown) => reason);
+
+    expect(error).toBeInstanceOf(MaketouResponseError);
+    expect(error).toMatchObject({
+      issues: [{ message: "expected string", path: "customerInfo.email" }],
+      status: 200,
+    });
+  });
+
   it("accepts and strips additive response fields", async () => {
     const maketou = new Maketou({
       apiKey: "test-api-key",
