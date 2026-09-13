@@ -1,0 +1,24 @@
+{
+  "name": "@marie-christ/maketou",
+  "version": "0.0.0",
+  "description": "Community-maintained TypeScript SDK for the Maketou API.",
+  "type": "module",
+  "packageManager": "pnpm@10.34.5",
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mariechristsagbo/maketou-typescript.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mariechristsagbo/maketou-typescript/issues"
+  },
+  "homepage": "https://github.com/mariechristsagbo/maketou-typescript#readme",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
+}
