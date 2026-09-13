@@ -24,7 +24,7 @@ No undocumented endpoints, webhooks, automatic retries, or payment-confirmation 
 pnpm add @marie-christ/maketou
 ```
 
-This package has no runtime dependencies.
+Runtime response validation uses [`zod`](https://zod.dev/) as its sole runtime dependency.
 
 ## Quick start
 
@@ -82,15 +82,16 @@ Calls `GET /api/v1/stores/cart/{cartId}` and resolves to `CartDetails`. Known st
 "waiting_payment" | "completed" | "abandoned" | "payment_failed"
 ```
 
-Only `completed` should be treated as a successful payment.
+Only `completed` should be treated as a successful payment. The SDK rejects unknown status values rather than treating an unfamiliar payment state as safe. It accepts additive response fields but strips them from returned SDK values, so harmless Maketou fields do not break integrations.
 
 ## Errors and rate limits
 
-Every API failure is a `MaketouError` with `operation`, HTTP `status`, and optional API `code`.
+Every SDK error caused by an HTTP response is a `MaketouError` with the real HTTP `status`, the operation, and an optional API `code`.
 
-- `MaketouRateLimitedError` is used for HTTP `429` and exposes `retryAfter` when Maketou returns `Retry-After`.
-- `MaketouResponseError` is used when a successful response does not match the documented shape. Its `issues` contain field paths and expected types, never request or response values.
+- `MaketouRateLimitedError` is used for HTTP `429` and exposes `retryAfter` when Maketou returns it. Maketou documents `Retry-After` as delay seconds, so the SDK intentionally parses only a non-negative numeric value.
+- `MaketouResponseError` is used when a `2xx` body is malformed JSON or does not match the documented response shape. It preserves the actual upstream `status` and exposes safe `issues` as `{ path, message }`; it does not include response values.
 - `MaketouConfigurationError` is thrown immediately for an empty API key.
+- Network and abort failures from `fetch` remain native errors so callers retain their original cause and platform-specific details.
 
 ```ts
 import { MaketouError, MaketouRateLimitedError } from "@marie-christ/maketou";
