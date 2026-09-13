@@ -1,0 +1,373 @@
+openapi: 3.0.3
+info:
+  title: Maketou API
+  version: "1.0.0"
+  description: API publique de Maketou pour créer des paniers, initier un paiement et consulter le statut d'un panier.
+servers:
+  - url: https://api.maketou.net
+    description: Production
+security:
+  - bearerAuth: []
+tags:
+  - name: Paniers
+    description: Création et consultation des paniers Maketou.
+paths:
+  /api/v1/stores/cart/checkout:
+    post:
+      operationId: createCartCheckout
+      tags:
+        - Paniers
+      summary: Créer un panier
+      description: Crée un panier pour un produit Maketou et retourne une URL vers laquelle rediriger le client pour payer.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCartCheckoutRequest"
+            examples:
+              standard:
+                summary: Panier standard
+                value:
+                  productDocumentId: 550e8400-e29b-41d4-a716-446655440000
+                  email: client@example.com
+                  firstName: Jean
+                  lastName: Dupont
+                  phone: "+33612345678"
+                  redirectURL: https://monsite.com/confirmation
+                  meta:
+                    userId: "12345"
+                    source: website
+              freePricing:
+                summary: Panier avec prix libre
+                value:
+                  productDocumentId: 7b63442b-200f-445c-89c6-cd4b3b001bf7
+                  email: customer@example.com
+                  firstName: John
+                  lastName: Doe
+                  phone: "+33612345678"
+                  redirectURL: https://my.app/post-paiement
+                  customerPrice: 2000
+      responses:
+        "201":
+          description: Panier créé.
+          headers:
+            X-RateLimit-Limit:
+              $ref: "#/components/headers/XRateLimitLimit"
+            X-RateLimit-Remaining:
+              $ref: "#/components/headers/XRateLimitRemaining"
+            X-RateLimit-Reset:
+              $ref: "#/components/headers/XRateLimitReset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateCartCheckoutResponse"
+              example:
+                cart:
+                  id: fd2d91d7-20d2-4b86-b067-d474fb0d1e60
+                  createdAt: "2025-11-28T14:27:00.805Z"
+                  updatedAt: "2025-11-28T14:27:00.805Z"
+                  status: waiting_payment
+                  customerInfo:
+                    firstName: John
+                    lastName: Doe
+                    email: customer@example.com
+                    phone: "+33612345678"
+                    lang: fr-FR
+                redirectUrl: https://checkout.moneroo.io/py_mj2m7m6gfro8
+        "400":
+          description: Produit invalide ou indisponible.
+          headers:
+            X-RateLimit-Limit:
+              $ref: "#/components/headers/XRateLimitLimit"
+            X-RateLimit-Remaining:
+              $ref: "#/components/headers/XRateLimitRemaining"
+            X-RateLimit-Reset:
+              $ref: "#/components/headers/XRateLimitReset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: INVALID_PRODUCT
+                message: The product is not available or does not belong to this store
+        "401":
+          description: Clé API invalide ou manquante.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: INVALID_API_KEY
+                message: Invalid or missing API key
+        "422":
+          description: Erreur de validation.
+          headers:
+            X-RateLimit-Limit:
+              $ref: "#/components/headers/XRateLimitLimit"
+            X-RateLimit-Remaining:
+              $ref: "#/components/headers/XRateLimitRemaining"
+            X-RateLimit-Reset:
+              $ref: "#/components/headers/XRateLimitReset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: VALIDATION_ERROR
+                message: The payload format is invalid
+        "429":
+          $ref: "#/components/responses/RateLimited"
+  /api/v1/stores/cart/{cartId}:
+    get:
+      operationId: retrieveCart
+      tags:
+        - Paniers
+      summary: Récupérer un panier
+      description: Récupère un panier existant afin de vérifier son statut.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: cartId
+          in: path
+          required: true
+          description: Identifiant du panier.
+          schema:
+            type: string
+            format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        "200":
+          description: Panier récupéré.
+          headers:
+            X-RateLimit-Limit:
+              $ref: "#/components/headers/XRateLimitLimit"
+            X-RateLimit-Remaining:
+              $ref: "#/components/headers/XRateLimitRemaining"
+            X-RateLimit-Reset:
+              $ref: "#/components/headers/XRateLimitReset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartDetails"
+              example:
+                id: fd2d91d7-20d2-4b86-b067-d474fb0d1e60
+                createdAt: "2025-11-28T14:27:00.805Z"
+                updatedAt: "2025-11-28T14:27:00.805Z"
+                paymentId: 4d729bf5-ef1e-4f7f-bf10-e63bd3db9b04
+                status: waiting_payment
+                customerInfo:
+                  lang: fr-FR
+                  email: customer@example.com
+                  phone: "+33612345678"
+                  lastName: Doe
+                  firstName: John
+                meta:
+                  userId: ok
+        "401":
+          description: Clé API invalide ou manquante.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Panier introuvable.
+          headers:
+            X-RateLimit-Limit:
+              $ref: "#/components/headers/XRateLimitLimit"
+            X-RateLimit-Remaining:
+              $ref: "#/components/headers/XRateLimitRemaining"
+            X-RateLimit-Reset:
+              $ref: "#/components/headers/XRateLimitReset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API key
+      description: Utilisez votre clé API de Maketou dans le header Authorization.
+  headers:
+    XRateLimitLimit:
+      description: Nombre maximal de requêtes autorisées dans la fenêtre appliquée.
+      schema:
+        type: integer
+        example: 60
+    XRateLimitRemaining:
+      description: Nombre de requêtes restantes dans la fenêtre en cours.
+      schema:
+        type: integer
+        example: 42
+    XRateLimitReset:
+      description: Date de réinitialisation de la fenêtre au format timestamp Unix en secondes.
+      schema:
+        type: integer
+        format: int64
+        example: 1752508860
+    RetryAfter:
+      description: Nombre de secondes à attendre avant d'envoyer une nouvelle requête.
+      schema:
+        type: integer
+        example: 8
+  responses:
+    RateLimited:
+      description: Limite de fréquence dépassée.
+      headers:
+        X-RateLimit-Limit:
+          $ref: "#/components/headers/XRateLimitLimit"
+        X-RateLimit-Remaining:
+          $ref: "#/components/headers/XRateLimitRemaining"
+        X-RateLimit-Reset:
+          $ref: "#/components/headers/XRateLimitReset"
+        Retry-After:
+          $ref: "#/components/headers/RetryAfter"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            code: RATE_LIMITED
+            message: Too many requests. Please retry later.
+  schemas:
+    CreateCartCheckoutRequest:
+      type: object
+      required:
+        - productDocumentId
+        - email
+        - firstName
+        - lastName
+      properties:
+        productDocumentId:
+          type: string
+          description: Identifiant public du produit.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        email:
+          type: string
+          format: email
+          description: Adresse email du client.
+          example: client@example.com
+        firstName:
+          type: string
+          description: Prénom du client.
+          example: Jean
+        lastName:
+          type: string
+          description: Nom du client.
+          example: Dupont
+        phone:
+          type: string
+          description: Numéro de téléphone du client.
+          example: "+33612345678"
+        redirectURL:
+          type: string
+          format: uri
+          description: URL vers laquelle rediriger le client après paiement.
+          example: https://monsite.com/confirmation
+        meta:
+          type: object
+          description: Métadonnées personnalisées associées au panier.
+          additionalProperties:
+            type: string
+          example:
+            userId: "12345"
+            source: website
+        customerPrice:
+          type: number
+          description: Montant choisi par le client pour un produit configuré en prix libre.
+          example: 2000
+    CreateCartCheckoutResponse:
+      type: object
+      required:
+        - cart
+        - redirectUrl
+      properties:
+        cart:
+          $ref: "#/components/schemas/Cart"
+        redirectUrl:
+          type: string
+          format: uri
+          description: URL vers laquelle rediriger le client pour payer.
+          example: https://checkout.moneroo.io/py_mj2m7m6gfro8
+    Cart:
+      type: object
+      required:
+        - id
+        - createdAt
+        - updatedAt
+        - status
+        - customerInfo
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: fd2d91d7-20d2-4b86-b067-d474fb0d1e60
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-11-28T14:27:00.805Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-11-28T14:27:00.805Z"
+        status:
+          $ref: "#/components/schemas/CartStatus"
+        customerInfo:
+          $ref: "#/components/schemas/CustomerInfo"
+    CartDetails:
+      allOf:
+        - $ref: "#/components/schemas/Cart"
+        - type: object
+          properties:
+            paymentId:
+              type: string
+              format: uuid
+              example: 4d729bf5-ef1e-4f7f-bf10-e63bd3db9b04
+            meta:
+              type: object
+              additionalProperties:
+                type: string
+              example:
+                userId: ok
+    CustomerInfo:
+      type: object
+      properties:
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: Doe
+        email:
+          type: string
+          format: email
+          example: customer@example.com
+        phone:
+          type: string
+          example: "+33612345678"
+        lang:
+          type: string
+          example: fr-FR
+    CartStatus:
+      type: string
+      enum:
+        - waiting_payment
+        - completed
+        - abandoned
+        - payment_failed
+      description: Statut du panier.
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: INVALID_PRODUCT
+        message:
+          type: string
+          example: The product is not available or does not belong to this store
